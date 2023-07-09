@@ -390,8 +390,10 @@
 	return TRUE
 
 /mob/living/carbon/proc/add_chemical_effect(effect, magnitude = 1)
+	to_world ("DEBUG: [effect] added at magnitude [magnitude].")
 	if(effect in chem_effects)
 		chem_effects[effect] += magnitude
+		to_world("DEBUG: [effect] was already present. New magnitude [magnitude].")
 	else
 		chem_effects[effect] = magnitude
 

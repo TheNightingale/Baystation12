@@ -176,7 +176,9 @@
 
 /obj/item/device/assembly_holder/timer_igniter
 	name = "timer-igniter assembly"
-	var/default_time = 5 //Allows creation of grenade subtypes with different timers.
+
+	///Allows creation of grenade subtypes with different timers.
+	var/default_time = 5
 
 
 /obj/item/device/assembly_holder/timer_igniter/New()

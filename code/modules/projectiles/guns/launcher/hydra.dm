@@ -14,14 +14,23 @@
 	screen_shake = 0
 	throw_distance = 7
 	release_force = 5
-	combustion = 0
 	fire_delay = 12
+
+	///For attack log purposes, we'll track the last fired grenade
+	var/obj/item/grenade/chem_grenade/microgrenade/micro = null
 
 	var/container_type = /obj/item/reagent_containers/glass/beaker/vial
 	var/obj/item/reagent_containers/active_container
 	var/list/containers = list()
-	var/max_containers = 2 //Plus one selected, total 3
 
+	/// Two max non-selected containers, plus one selected.
+	var/max_containers = 2
+
+	/**
+	* Healchems, painkillers, misc medicine and teargas/water. The reason we have this is because chemsmoke is hilariously, painfully broken when used offensively.
+	*
+	* Be very, very careful when adding things to this list.
+	*/
 	var/allowed_reagents = list(
 		/datum/reagent/inaprovaline,
 		/datum/reagent/bicaridine,
@@ -40,12 +49,11 @@
 		/datum/reagent/adminordrazine,
 		/datum/reagent/capsaicin,
 		/datum/reagent/water
-		)	//Healchems, painkillers, misc medicine and teargas/water. The reason we have this is because chemsmoke is hilariously, painfully broken when used offensively.
-			//Be very, very careful when adding things to this list.
+		)
 	matter = list(MATERIAL_PLASTIC = 6000, MATERIAL_GLASS = 3000)
 
-//Swap between loaded containers.
-/obj/item/gun/launcher/hydra/proc/pump(mob/M as mob)
+/// Swap between loaded containers.
+/obj/item/gun/launcher/hydra/proc/pump(mob/M)
 	var/obj/item/reagent_containers/next = null
 	if (length(containers))
 		next = containers[1]
@@ -70,25 +78,34 @@
 		if (active_container)
 			to_chat(user, "\A [active_container] is selected. Reagents remaining: [active_container.reagents.total_volume].")
 
-/obj/item/gun/launcher/hydra/proc/load(container_type, mob/user)
+/obj/item/gun/launcher/hydra/proc/load(cont_type, mob/user)
 	if (length(containers) >= max_containers)
 		to_chat(user, SPAN_WARNING("\The [src] is full."))
 		return
-	if (!user.unEquip(container_type, src))
+	if (!user.unEquip(cont_type, src))
 		return
-	containers.Insert(1, container_type) //add to the head of the list, so that it is loaded on the next pump
-	user.visible_message("\The [user] inserts \a [container_type] into \the [src].", SPAN_NOTICE("You insert \a [container_type] into \the [src]."))
+	containers.Insert(1, cont_type) //add to the head of the list, so that it is loaded on the next pump
+	user.visible_message(
+	SPAN_NOTICE("\The [user] inserts \a [cont_type] into \the [src]."),
+	SPAN_NOTICE("You insert \a [cont_type] into \the [src].")
+	)
 
 /obj/item/gun/launcher/hydra/proc/unload(mob/user)
 	if (active_container)
 		user.put_in_hands(active_container)
-		user.visible_message("\The [user] removes \a [active_container] from [src].", SPAN_NOTICE("You remove \a [active_container] from \the [src]."))
+		user.visible_message(
+		SPAN_NOTICE("\The [user] removes \a [active_container] from [src]."),
+		SPAN_NOTICE("You remove \a [active_container] from \the [src].")
+		)
 		active_container = null
 	else if (length(containers))
-		var/V = containers[length(containers)]
+		var/vial = containers[length(containers)]
 		LIST_DEC(containers)
-		user.put_in_hands(V)
-		user.visible_message("\The [user] removes \a [V] from [src].", SPAN_NOTICE("You remove \a [V] from \the [src]."))
+		user.put_in_hands(vial)
+		user.visible_message(
+		SPAN_NOTICE("\The [user] removes \a [vial] from [src]."),
+		SPAN_NOTICE("You remove \a [vial] from \the [src].")
+		)
 	else
 		to_chat(user, SPAN_WARNING("\The [src] is empty."))
 
@@ -97,18 +114,18 @@
 
 
 /obj/item/gun/launcher/hydra/use_tool(obj/item/tool, mob/user, list/click_params)
-	//container - load.
+	//Container - load.
 	if (istype(tool, container_type))
 		if (tool.reagents.total_volume >= 10)
-			for (var/datum/reagent/current in tool.reagents.reagent_list)
+			for (var/datum/reagent/current as anything in tool.reagents.reagent_list)
 				if (!is_type_in_list(current, allowed_reagents))
 					to_chat(user, SPAN_WARNING("\The [src]'s reagent lock flashes red and refuses \the [tool]."))
-					return FALSE
+					return TRUE
 			load(tool, user)
 			return TRUE
 		else
 			to_chat(user, SPAN_WARNING("\The [tool] doesn't have enough reagents to do this!"))
-			return FALSE
+			return TRUE
 
 	return ..()
 
@@ -122,21 +139,33 @@
 /obj/item/gun/launcher/hydra/consume_next_projectile()
 	if (active_container)
 		var/obj/item/grenade/chem_grenade/microgrenade/micro = new (src)
-		if (micro.B1)
-			active_container.reagents.trans_to_obj(micro.B1, 10) //Move 10u into the microgrenade...
+		if (micro.beaker_1)
+			active_container.reagents.trans_to_obj(micro.beaker1, 10) //Move 10u into the microgrenade...
 			micro.activate(null)
 			return micro //... and fire!
 		else
-			return null //Should never happen- but just in case.
+			crash_with({"[src] attempted to fire with no contained grenade"})
+			return null
 	else
 		return null //No container loaded.
 
 /obj/item/gun/launcher/hydra/handle_post_fire(mob/user)
-	log_and_message_admins("fired a chemical smoke grenade from a microgrenade launcher.")
+	if(micro)
+		var/reagent_list = null
+		for (var/datum/reagent/medicine in micro.beaker_1.reagents)
+			if(istype(medicine, /datum/reagent/sugar)) //Skip sugar, which comes in there automatically as part of the smoke
+				continue
+			reagent_list += medicine
+		admin_attacker_log(user, "fired a chemical smoke grenade from a microgrenade launcher, containing [reagent_list].")
+	else
+		crash_with({"[src] fired with no contained grenade"}) //There's a grenade, but no contents.
 
 	if (!active_container.reagents || active_container.reagents.total_volume < 10) //If there's not enough for another shot...
 		active_container.dropInto(loc) //Auto-eject the container.
-		to_chat(user, "\The [src] automatically ejects \the [active_container].")
+		visible_message(
+		SPAN_NOTICE("\The [src] automatically ejects \the [active_container].")
+		)
+		playsound(src, "sound/weapons/empty.ogg", 100, 1)
 		active_container = null
 		pump(user)
 
@@ -149,20 +178,21 @@
 	stage = 2
 	affected_area = 2 //Smaller than regular chemnades.
 	icon_state = "microgrenade"
-	var/obj/item/reagent_containers/glass/beaker/B1 = null //So we can check B1/B2 when loading the grenade.
-	var/obj/item/reagent_containers/glass/beaker/B2 = null
+	/// So we can check beaker1/beaker2 when loading the grenade.
+	var/obj/item/reagent_containers/glass/beaker/beaker1 = null
+	var/obj/item/reagent_containers/glass/beaker/beaker2 = null
 
 
 /obj/item/grenade/chem_grenade/microgrenade/Initialize()
 	. = ..()
-	B1 = new (src)
-	B2 = new (src)
-	B1.reagents.add_reagent(/datum/reagent/phosphorus, 3) //Smoke, 9u
-	B2.reagents.add_reagent(/datum/reagent/potassium, 3) //Plus 10u reagent from the container. Doesn't sound like much...
-	B2.reagents.add_reagent(/datum/reagent/sugar, 3) //... but chemsmoke is wild. Any more and we'd risk ODing the patient.
+	beaker1 = new (src)
+	beaker2 = new (src)
+	beaker1.reagents.add_reagent(/datum/reagent/sugar, 3) //Smoke, 9u
+	beaker2.reagents.add_reagent(/datum/reagent/potassium, 3) //Plus 10u reagent from the container. Doesn't sound like much...
+	beaker2.reagents.add_reagent(/datum/reagent/phosphorus, 3) //... but chemsmoke is wild. Any more and we'd risk ODing the patient.
 	detonator = new /obj/item/device/assembly_holder/timer_igniter/hydra (src)
-	beakers += B1
-	beakers += B2
+	beakers += beaker1
+	beakers += beaker2
 
 /obj/item/device/assembly_holder/timer_igniter/hydra
 	default_time = 3 //Quicker detonation (default is 5).

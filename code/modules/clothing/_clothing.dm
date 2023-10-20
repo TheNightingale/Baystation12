@@ -779,6 +779,7 @@ BLIND     // can't see anything
 		/obj/item/tank/oxygen_scba,
 		/obj/item/tank/nitrogen_emergency
 	)
+	allowed_storage_categories = STORAGE_FLAG_EMERGENCY
 	slot_flags = SLOT_OCLOTHING
 	item_flags = ITEM_FLAG_WASHER_ALLOWED
 	blood_overlay_type = "suit"

@@ -53,6 +53,18 @@ GLOBAL_LIST_INIT(bitflags, list(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 204
 #define ITEM_FLAG_CAN_HIDE_IN_SHOES         FLAG(14) // Items that can be hidden in shoes that permit it
 #define ITEM_FLAG_WASHER_ALLOWED            FLAG(15) // Items that can be washed in washing machines
 
+//Item storage flags.
+#define STORAGE_FLAG_EMERGENCY				FLAG(0) // The 'default' storage list - small oxygen tanks, flashlights, PDAs, pens.
+#define STORAGE_FLAG_BUREAUCRACY			FLAG(1) // Pens, papers, folders, tape recorders, stamps, etc.
+#define STORAGE_FLAG_MEDICAL				FLAG(2) // Autoinjectors, syringes, beakers, bottles, splints, etc.
+#define STORAGE_FLAG_ENGINEERING			FLAG(3) // Screwdrivers, wrenches, welders, T-ray scanners, etc.
+#define STORAGE_FLAG_SECURITY				FLAG(4) // Handcuffs, flashes, pepperspray, warrant projectors, etc.
+#define STORAGE_FLAG_FORENSIC				FLAG(5) // Luminol, fiber kits, fingerprint cards, evidence bags, etc.
+#define STORAGE_FLAG_COMBAT					FLAG(6) // Guns, grenades, ammo casings, magazines, etc.
+#define STORAGE_FLAG_SCIENCE				FLAG(7) // Scanners, beakers, various niche science equipment, etc.
+#define STORAGE_FLAG_EXPLORATION			FLAG(8) // Machetes, flag capsules, GCSes, binoculars, etc.
+#define STORAGE_FLAG_EVA					FLAG(9) // Oxygen tanks, jetpacks, suit coolers, etc.
+
 // Flags for pass_flags.
 #define PASS_FLAG_TABLE     FLAG(0)
 #define PASS_FLAG_GLASS     FLAG(1)

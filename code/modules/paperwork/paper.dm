@@ -25,6 +25,7 @@
 	throw_speed = 1
 	layer = ABOVE_OBJ_LAYER
 	slot_flags = SLOT_HEAD
+	storage_flags = STORAGE_FLAG_BUREAUCRACY
 	body_parts_covered = HEAD
 	attack_verb = list("bapped")
 

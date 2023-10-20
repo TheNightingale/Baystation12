@@ -53,6 +53,9 @@
 
 	var/item_flags = 0 //Miscellaneous flags pertaining to equippable objects.
 
+	///Categories the item counts as for suit storage (and, later, maybe belts and such?) - see _defines/flags.dm
+	var/storage_flags = 0
+
 	//var/heat_transfer_coefficient = 1 //0 prevents all transfers, 1 is invisible
 	var/gas_transfer_coefficient = 1 // for leaking gas from turf to mask and vice-versa (for masks right now, but at some point, i'd like to include space helmets)
 	var/permeability_coefficient = 1 // for chemicals/diseases
@@ -64,7 +67,8 @@
 	var/armor_type = /datum/extension/armor
 	var/list/armor
 	var/armor_degradation_speed //How fast armor will degrade, multiplier to blocked damage to get armor damage value.
-	var/list/allowed = null //suit storage stuff.
+	var/list/allowed = null //suit storage stuff: individual items
+	var/allowed_storage_categories = 0 //suit storage stuff: item categories. uses flags
 	var/obj/item/device/uplink/hidden_uplink = null // All items can have an uplink hidden inside, just remember to add the triggers.
 	var/zoomdevicename = null //name used for message when binoculars/scope is used
 	var/zoom = 0 //1 if item is actively being used to zoom. For scoped guns and binoculars.
@@ -457,7 +461,12 @@ var/global/list/slot_flags_enumeration = list(
 				if(!disable_warning)
 					to_chat(usr, SPAN_WARNING("You somehow have a suit with no defined allowed items for suit storage, stop that."))
 				return 0
-			if( !(istype(src, /obj/item/modular_computer/pda) || istype(src, /obj/item/pen) || is_type_in_list(src, H.wear_suit.allowed)) )
+			if (H.wear_suit.allowed_storage_categories & storage_flags)
+				to_chat(H, "ok, it's in the list! returning 1")
+				return 1
+			else
+				to_chat(H, "Not in the list! returning 0")
+			if( !(istype(src, /obj/item/modular_computer/pda) || istype(src, /obj/item/pen) || is_type_in_list(src, H.wear_suit.allowed)))
 				return 0
 		if(slot_handcuffed)
 			if(!istype(src, /obj/item/handcuffs))

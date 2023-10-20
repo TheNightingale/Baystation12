@@ -16,6 +16,7 @@
 	possible_transfer_amounts = null
 	atom_flags = ATOM_FLAG_OPEN_CONTAINER
 	slot_flags = SLOT_BELT
+	storage_flags = STORAGE_FLAG_MEDICAL
 
 	// autoinjectors takes less time than a normal syringe (overriden for hypospray).
 	// This delay is only applied when injecting concious mobs, and is not applied for self-injection

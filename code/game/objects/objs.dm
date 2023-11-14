@@ -189,12 +189,11 @@
 	if (damtype == DAMAGE_BURN)
 		. |= DAMAGE_FLAG_LASER
 
-/obj/attackby(obj/item/O, mob/user)
-	if (isWrench(O) && HAS_FLAGS(obj_flags, OBJ_FLAG_ANCHORABLE))
-		wrench_floor_bolts(user, O)
+/obj/use_tool(obj/item/tool, mob/living/user, list/click_params)
+	if (isWrench(tool) && HAS_FLAGS(obj_flags, OBJ_FLAG_ANCHORABLE))
+		wrench_floor_bolts(user, tool)
 		return TRUE
 	return ..()
-
 
 /**
  * Whether or not the object can be anchored in its current state/position. Assumes the anchorable flag has already been checked.
@@ -251,6 +250,8 @@
 		var/datum/unarmed_attack/attack = assailant.get_unarmed_attack(src)
 		if (!attack)
 			return ..()
+		assailant.do_attack_animation(src)
+		assailant.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		var/damage = attack.damage + rand(1,5)
 		var/attack_verb = "[pick(attack.attack_verb)]"
 
@@ -268,11 +269,8 @@
 				SPAN_WARNING("\The [assailant] [attack_verb] \the [src]!"),
 				SPAN_WARNING("You [attack_verb] \the [src]!")
 				)
-		assailant.do_attack_animation(src)
-		assailant.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		damage_health(damage, attack.get_damage_type(), attack.damage_flags())
 		return
-
 	..()
 
 /obj/is_fluid_pushable(amt)

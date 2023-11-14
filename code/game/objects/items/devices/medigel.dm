@@ -7,6 +7,7 @@
 	w_class = ITEM_SIZE_SMALL
 	item_flags = ITEM_FLAG_NO_BLUDGEON
 	slot_flags = SLOT_BELT
+	origin_tech = list(TECH_BIO = 5, TECH_ENGINEERING = 4)
 
 	var/uses = 30
 	var/max_uses = 30
